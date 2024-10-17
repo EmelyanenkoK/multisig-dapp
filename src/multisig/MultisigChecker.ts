@@ -109,6 +109,7 @@ export const checkMultisig = async (
     isTestnet: boolean,
     lastOrdersMode: 'none' | 'history' | 'aggregate',
     needAdditionalChecks: boolean,
+    isExpertMode:boolean
 ): Promise<MultisigInfo> => {
 
     // Account State and Data
@@ -361,7 +362,7 @@ export const checkMultisig = async (
             for (const lastOrder of lastOrders) {
                 if (lastOrder.type === 'pending') {
                     try {
-                        const orderInfo = await checkMultisigOrder(lastOrder.order.address, multisigOrderCode, multisigInfo, isTestnet, false);
+                        const orderInfo = await checkMultisigOrder(lastOrder.order.address, multisigOrderCode, multisigInfo, isTestnet, false, isExpertMode);
                         lastOrder.orderInfo = orderInfo;
                         const isExpired = (new Date()).getTime() > orderInfo.expiresAt.getTime();
                         if (isExpired) {

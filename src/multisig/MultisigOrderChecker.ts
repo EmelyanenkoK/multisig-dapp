@@ -41,6 +41,7 @@ export const checkMultisigOrder = async (
     multisigInfo: MultisigInfo,
     isTestnet: boolean,
     needAdditionalChecks: boolean,
+    isExpertMode:boolean
 ): Promise<MultisigOrderInfo> => {
 
     // Account State and Data
@@ -212,8 +213,11 @@ export const checkMultisigOrder = async (
             return `Force burn ${parsed.action.jettonAmount} jettons (in units) from user ${userAddress}; ${fromNano(parsed.tonAmount)} TON for gas`;
         } catch (e) {
         }
-
-        throw new Error('Unsupported action')
+        if (isExpertMode) {
+            return `Can not parse order content. Raw: ${cell.toBoc().toString('base64')}`;
+        } else {
+            throw new Error('Unsupported action')
+        }
 
     }
 
