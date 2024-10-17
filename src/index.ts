@@ -975,11 +975,11 @@ const orderTypes: OrderType[] = [
                 type: 'BOC'
             },
             amount: {
-                name: 'Jetton Amount (in units)',
-                type: 'Jetton'
+                name: 'TON Amount',
+                type: 'TON'
             },
             toAddress: {
-                name: 'To Address',
+                name: 'Destination Address',
                 type: 'Address'
             }
         },
