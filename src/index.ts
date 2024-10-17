@@ -54,6 +54,7 @@ const browserLang: string = navigator.language;
 const lang: 'ru' | 'en' = (browserLang === 'ru-RU') || (browserLang === 'ru') || (browserLang === 'be-BY') || (browserLang === 'be') || (browserLang === 'kk-KZ') || (browserLang === 'kk') ? 'ru' : 'en';
 
 const IS_TESTNET: boolean = window.location.href.indexOf('testnet=true') > -1;
+const IS_EXPERT_MODE: boolean = window.location.href.indexOf('expert_mode=true') > -1;
 
 if (IS_TESTNET) {
     $('.testnet-badge').style.display = 'block';
@@ -560,7 +561,7 @@ $('#order_approveButton').addEventListener('click', async () => {
 
 // NEW ORDER
 
-type FieldType = 'TON' | 'Jetton' | 'Address' | 'URL' | 'Status';
+type FieldType = 'TON' | 'Jetton' | 'Address' | 'URL' | 'BOC' | 'Status';
 
 interface ValidatedValue {
     value?: any;
@@ -631,6 +632,13 @@ const validateValue = (fieldName: string, value: string, fieldType: FieldType): 
             }
             return makeValue(value);
 
+        case 'BOC':
+            try {
+                return makeValue(Cell.fromBase64(value));
+            } catch (error) {
+                return makeError('Invalid BOC');
+            };
+
         case 'Status':
             if (LOCK_TYPES.indexOf(value) > -1) {
                 return makeValue(value);
@@ -656,6 +664,7 @@ interface OrderType {
     fields: { [key: string]: OrderField };
     check?: (values: { [key: string]: any }) => Promise<ValidatedValue>;
     makeMessage: (values: { [key: string]: any }) => Promise<MakeMessageResult>;
+    expertMode?: Boolean;
 }
 
 const AMOUNT_TO_SEND = toNano('0.2'); // 0.2 TON
@@ -957,13 +966,41 @@ const orderTypes: OrderType[] = [
             }
         }
     },
+
+    {
+        name: 'Arbitrary order',
+        fields: {
+            order: {
+                name: 'Order BOC',
+                type: 'BOC'
+            },
+            amount: {
+                name: 'Jetton Amount (in units)',
+                type: 'Jetton'
+            },
+            toAddress: {
+                name: 'To Address',
+                type: 'Address'
+            }
+        },
+        makeMessage: async (values): Promise<MakeMessageResult> => {
+            return {
+                toAddress: values.toAddress,
+                tonAmount: values.amount,
+                body: values.order
+            };
+        },
+        expertMode: true
+    },
 ]
 
 const getOrderTypesHTML = (): string => {
     let html = '';
     for (let i = 0; i < orderTypes.length; i++) {
-        const orderType = orderTypes[i];
-        html += `<option value="${i}">${orderType.name}</option>`;
+        if( (!(orderTypes[i].expertMode)) || IS_EXPERT_MODE) {
+            const orderType = orderTypes[i];
+            html += `<option value="${i}">${orderType.name}</option>`;
+        }
     }
     return html;
 }
